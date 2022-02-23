@@ -2,12 +2,13 @@
 
 # Game class
 class Game
-  attr_accessor :knight_loc, :board, :current_spot, :last_spot, :letter_to_num
+  attr_accessor :board, :current_spot, :last_spot, :last_color, :letter_to_num
 
-  def initialize(knight_loc = [0, 0])
-    self.knight_loc = knight_loc
+  def initialize(current_spot = nil)
     self.board = Array.new(8) { Array.new(8, ' ') }
     self.letter_to_num = { a: 0, b: 1, c: 2, d: 3, e: 4, f: 5, g: 6, h: 7 }.freeze
+    self.last_spot = nil
+    self.last_spot = current_spot
   end
 
   def show_board
@@ -46,12 +47,21 @@ class Game
   end
 
   def place_piece(selection)
-    selection[0] = selection[0].downcase
-    x_cord = letter_to_num[selection[0].to_sym]
-    y_cord = selection[1].to_i - 1
+    selection[0] = selection[0].downcase.to_sym
+    x_cord = letter_to_num[selection[0]]
+    selection[1] = selection[1].to_i - 1
+    y_cord = selection[1]
+    self.last_spot = current_spot
+    board[current_spot[0]][current_spot[1]] = last_color unless last_spot.nil?
+
+    self.last_color = board[x_cord][y_cord]
     board[x_cord][y_cord] = "\u265e "
     self.current_spot = [x_cord, y_cord]
     show_board
+    select_movement
+  end
+
+  def select_movement
     puts 'Where would you like to move now?'
     selection = gets.chomp.split('')
     while (selection[0] =~ /[a-hA-H]/).nil? || (selection[1] =~ /[1-8]/).nil? || selection[1].to_i > 8
@@ -59,10 +69,10 @@ class Game
       selection = gets.chomp.split('')
     end
     solution = knight_moves(selection)
-    puts solution
     puts " It took #{solution[0]} moves!"
     puts "here's your path: "
     p calculate_path(solution[1])
+    place_piece(selection)
   end
 
   def calculate_path(node)
@@ -76,7 +86,7 @@ class Game
     final_path
   end
 
-  def knight_moves(dest, source = Node.new(current_spot[0], current_spot[1]))
+  def knight_moves(dest)
     row = [2, 2, -2, -2, 1, 1, -1, -1].freeze
     col = [-1, 1, 1, -1, 2, -2, 2, -2].freeze
     dest = Node.new(letter_to_num[dest[0].to_sym], dest[1].to_i - 1)
@@ -110,9 +120,9 @@ class Game
 
     false
   end
-
 end
 
+# Node class
 class Node
   attr_accessor :x_cord, :y_cord, :dist, :parent
 
